@@ -17,3 +17,6 @@ yarn install
 ```bash
 node .
 ```
+
+## License
+MIT
