@@ -6,8 +6,8 @@ require('dotenv').config()
 
 let holderAddresses = []
 
-function getAssets(offset) {
-  const url = `https://api.opensea.io/api/v1/assets?order_direction=asc&offset=${offset}&limit=50&asset_contract_address=${process.env.CONTRACT_ADDRESS}`
+function getAssets(token_ids) {
+  const url = `https://api.opensea.io/api/v1/assets?order_direction=asc&offset=0&limit=50&asset_contract_address=${process.env.CONTRACT_ADDRESS}&token_ids=${getTokenIdsQuery(token_ids)}`
   const options = {
     headers: {
       'X-API-KEY': process.env.API_KEY
@@ -15,6 +15,14 @@ function getAssets(offset) {
   }
 
   return axios.get(url, options).then(response => response.data.assets)
+}
+
+function getTokenIdsQuery(token_ids) {
+  return token_ids.join('&token_ids=')
+}
+
+function getTokenIds(offset) {
+  return Array.from(Array(30)).map((_, i) => offset + i)
 }
 
 function sleep(ms) {
@@ -39,11 +47,12 @@ async function init() {
 
   while (running) {
     console.log(`Getting new assets from offset ${offset}...`)
-    const assets = await getAssets(offset)
+    let token_ids = getTokenIds(offset)
+    const assets = await getAssets(token_ids)
 
     if (assets.length) {
       holderAddresses.push(...assets.map(a => a.owner.address))
-      offset += 50
+      offset += 30
       await sleep(1000)
     } else {
       finish()
